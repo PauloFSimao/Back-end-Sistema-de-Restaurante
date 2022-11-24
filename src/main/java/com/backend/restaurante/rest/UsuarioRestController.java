@@ -36,11 +36,9 @@ public class UsuarioRestController {
 			try {
 				
 				// criptografando os dados
-				String login = encoder.encode(usuario.getLogin());
 				String senha = encoder.encode(usuario.getSenha());
 				
 				// setando os valores criptografados
-				usuario.setLogin(login);
 				usuario.setSenha(senha);
 				
 				repository.save(usuario);
@@ -70,11 +68,9 @@ public class UsuarioRestController {
 			return new ResponseEntity<Object>(erro, HttpStatus.INTERNAL_SERVER_ERROR);
 		} else {
 			// criptografando os dados
-			String login = encoder.encode(usuario.getLogin());
 			String senha = encoder.encode(usuario.getSenha());
 			
 			// setando os valores criptografados
-			usuario.setLogin(login);
 			usuario.setSenha(senha);
 			usuario.setId(id);
 			repository.save(usuario);
@@ -95,24 +91,22 @@ public class UsuarioRestController {
 		}
 	}
 	
-	public Boolean validaSenha(String usuarioCrip, String senha) {
-		Boolean valido = encoder.matches(usuarioCrip, senha);
-		return valido;
-	}
-	
 	@RequestMapping(value = "/login", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> logar(@RequestBody Usuario usuario){
+	public Object logar(@RequestBody Usuario usuario){
 		Optional<Usuario> user = repository.retornaLogin(usuario.getLogin());
-		if(user.isEmpty()) {
-			Erro erro = new Erro(HttpStatus.INTERNAL_SERVER_ERROR, "Não foi possível logar", null);
-			return new ResponseEntity<Object>(erro, HttpStatus.INTERNAL_SERVER_ERROR);
-		}else {
-			Boolean senhaValida = validaSenha(user.get().getSenha(), usuario.getSenha());
+		System.out.println(user.get());
+		
+		if(!user.isEmpty()) {
+			String senhaCrip = repository.findById(user.get().getId()).get().getSenha();
+			boolean valido = encoder.matches(usuario.getSenha(), senhaCrip);
+			System.out.println(valido);
 			
-			if(senhaValida == true && !user.isEmpty()) {
-				Sucesso sucesso = new Sucesso(HttpStatus.OK, "Sucesso");
-				return new ResponseEntity<Object>(sucesso, HttpStatus.OK);
-			}
+			return valido;
+		} else {
+			return null;
 		}
+			
+		
+		
 	}
 }
